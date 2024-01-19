@@ -17,22 +17,19 @@
         const $fileSelect = document.querySelector('#fileSelect');
         const directoryName = 'pictures';
         const opfsRoot = await navigator.storage.getDirectory();
-        const picturesFolder = await opfsRoot.getDirectoryHandle(
-          directoryName,
-          {
-            create: true,
-          }
-        );
+        const picturesFolder = await opfsRoot.getDirectoryHandle(directoryName, {
+          create: true,
+        });
+
 
         const removeFile = async (fileName, folder) => {
-          if (!('remove' in FileSystemFileHandle.prototype)) {
-            return alert('Tu navegador no soporta la eliminación de archivos');
-          }
-          if (!confirm('¿De verdad quieres eliminarlo?')) {
-            return;
-          }
           const fileHandle = await folder.getFileHandle(fileName);
-          await fileHandle.remove();
+
+          try {
+            await fileHandle.removeEntry();
+          } catch (error) {
+            console.error('Error al eliminar el archivo:', error);
+          }
         };
 
         const downloadFile = async (fileName, folder) => {
@@ -65,10 +62,12 @@
             reader.readAsArrayBuffer(file);
           });
         };
+
         const renderFiles = async (folder) => {
           while ($mainContainer.firstChild) {
             $mainContainer.removeChild($mainContainer.firstChild);
           }
+      
           for await (let [name, handle] of folder) {
             const container = Object.assign(document.createElement('div'));
             const anchorFileName = Object.assign(document.createElement('a'), {
@@ -81,13 +80,16 @@
               href: 'javascript:void(0)',
               classList: ['remove'],
             });
+      
             anchorFileName.addEventListener('click', () => {
               downloadFile(name, folder);
             });
+      
             anchorRemove.addEventListener('click', async () => {
               await removeFile(name, folder);
               await renderFiles(folder);
             });
+      
             container.appendChild(anchorFileName);
             container.appendChild(anchorRemove);
             $mainContainer.append(container);
