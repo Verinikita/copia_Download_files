@@ -15,6 +15,7 @@
       document.addEventListener('DOMContentLoaded', async () => {
         const $mainContainer = document.querySelector('#container');
         const $fileSelect = document.querySelector('#fileSelect');
+        const $applyFunctionButton = document.querySelector('#applyFunction');
         const directoryName = 'pictures';
         const opfsRoot = await navigator.storage.getDirectory();
         const picturesFolder = await opfsRoot.getDirectoryHandle(directoryName, {
@@ -23,33 +24,15 @@
 
 
 
-        const removeFile = async (fileName, folder) => {
-          try {
-            await folder.removeEntry(fileName);
-          } catch (error) {
-            console.error('Error al eliminar el archivo:', error);
-          }
-        };
-
       const removeFile = async (fileName, folder) => {
-        if ('remove' in folder) {
-          // Usar el método remove si está disponible
-          try {
-            await folder.remove(fileName);
-          } catch (error) {
-            console.error('Error al eliminar el archivo:', error);
-          }
-        } else if ('removeEntry' in folder) {
-          // Usar removeEntry si remove no está disponible
-          try {
-            await folder.removeEntry(fileName);
-          } catch (error) {
-            console.error('Error al eliminar el archivo:', error);
-          }
-        } else {
-          console.error('Tu navegador no admite la eliminación de archivos');
+        try {
+          await folder.removeEntry(fileName);
+        } catch (error) {
+          console.error('Error al eliminar el archivo:', error);
         }
       };
+
+
 
         const storeFile = async (file, folder) => {
           return new Promise((resolve, reject) => {
@@ -113,6 +96,23 @@
           renderFiles(picturesFolder);
         });
         renderFiles(picturesFolder);
+      });
+      $applyFunctionButton.addEventListener('click', async () => {
+          // Obtén la lista de archivos almacenados en la carpeta pictures
+          const filesList = await picturesFolder.keys();
+      
+          // Llama a tu función AlphaFoldXploR_read para procesar cada archivo
+          for (const fileName of filesList) {
+              const fileHandle = await picturesFolder.getFileHandle(fileName);
+              const file = await fileHandle.getFile();
+              const fileBuffer = await file.arrayBuffer();
+              
+              // Llama a tu función con el contenido del archivo
+              await AlphaFoldXploR_read(fileBuffer);
+          }
+      
+          // Puedes agregar más lógica aquí después de procesar todos los archivos
+          console.log('Aplicar función completada...');
       });
     </script>
     <style>
